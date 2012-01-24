@@ -1293,6 +1293,13 @@
                       }, 0);
                     }, false);
 
+                    this.video.ownerDocument.addEventListener( "mozfullscreenchange", function(e) {
+                      clearTimeout(this._hideControlsTimeout);
+                      if(self.isVideoInFullScreen() && self.video.mozMatchesSelector("video:hover")) {
+                        self._hideControlsTimeout = setTimeout(self._hideControlsFn, self.HIDE_CONTROLS_TIMEOUT_MS);
+                      }
+                    }, false);
+
                     if (!this.isAudioOnly) {
                       this.muteButton.addEventListener("mouseover",  function(e) { self.onVolumeMouseInOut(e); }, false);
                       this.muteButton.addEventListener("mouseout",   function(e) { self.onVolumeMouseInOut(e); }, false);
