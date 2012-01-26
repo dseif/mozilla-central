@@ -890,13 +890,6 @@ void nsHTMLMediaElement::UpdatePreloadAction()
     }
   }
 
-  if ((mBegun || mIsRunningSelectResource) && nextAction < mPreloadAction) {
-    // We've started a load or are already downloading, and the preload was
-    // changed to a state where we buffer less. We don't support this case,
-    // so don't change the preload behaviour.
-    return;
-  }
-
   mPreloadAction = nextAction;
   if (nextAction == nsHTMLMediaElement::PRELOAD_ENOUGH) {
     if (mLoadIsSuspended) {
@@ -920,6 +913,9 @@ void nsHTMLMediaElement::UpdatePreloadAction()
       // metadata.
       ResumeLoad(PRELOAD_METADATA);
     }
+  } else if (nextAction == nsHTMLMediaElement::PRELOAD_NONE) {
+    SuspendLoad();
+    mIsRunningSelectResource = false;
   }
 }
 
