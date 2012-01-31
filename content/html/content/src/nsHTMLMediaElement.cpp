@@ -625,7 +625,7 @@ void nsHTMLMediaElement::QueueLoadFromSourceTask()
 void nsHTMLMediaElement::QueueSelectResourceTask()
 {
   // Don't allow multiple async select resource calls to be queued.
-  if (mIsRunningSelectResource)
+  if (mHaveQueuedSelectResource)
     return;
   mIsRunningSelectResource = true;
   mNetworkState = nsIDOMHTMLMediaElement::NETWORK_NO_SOURCE;
@@ -676,6 +676,9 @@ void nsHTMLMediaElement::SelectResource()
   // Load event was delayed, and still is, so no need to call
   // AddRemoveSelfReference, since it must still be held
   DispatchAsyncEvent(NS_LITERAL_STRING("loadstart"));
+
+  UpdatePreloadAction();
+  mHaveQueuedSelectResource = true;
 
   // If we have a 'src' attribute, use that exclusively.
   nsAutoString src;
@@ -890,6 +893,13 @@ void nsHTMLMediaElement::UpdatePreloadAction()
     }
   }
 
+  if ((mBegun || mIsRunningSelectResource) && nextAction < mPreloadAction) {
+    // We've started a load or are already downloading, and the preload was
+    // changed to a state where we buffer less. We don't support this case,
+    // so don't change the preload behaviour.
+    return;
+  }
+
   mPreloadAction = nextAction;
   if (nextAction == nsHTMLMediaElement::PRELOAD_ENOUGH) {
     if (mLoadIsSuspended) {
@@ -913,10 +923,7 @@ void nsHTMLMediaElement::UpdatePreloadAction()
       // metadata.
       ResumeLoad(PRELOAD_METADATA);
     }
-  } else if (nextAction == nsHTMLMediaElement::PRELOAD_NONE) {
-    SuspendLoad();
-    mIsRunningSelectResource = false;
-  }
+  } 
 }
 
 nsresult nsHTMLMediaElement::LoadResource()
@@ -1428,6 +1435,7 @@ nsHTMLMediaElement::nsHTMLMediaElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     mIsLoadingFromSourceChildren(false),
     mDelayingLoadEvent(false),
     mIsRunningSelectResource(false),
+    mHaveQueuedSelectResource(false),
     mSuspendedAfterFirstFrame(false),
     mAllowSuspendAfterFirstFrame(true),
     mHasPlayedOrSeeked(false),
