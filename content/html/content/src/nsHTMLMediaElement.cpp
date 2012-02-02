@@ -627,9 +627,9 @@ void nsHTMLMediaElement::QueueSelectResourceTask()
   // Don't allow multiple async select resource calls to be queued.
   if (mHaveQueuedSelectResource)
     return;
-  mIsRunningSelectResource = true;
+  mHaveQueuedSelectResource = true;
   mNetworkState = nsIDOMHTMLMediaElement::NETWORK_NO_SOURCE;
-  AsyncAwaitStableState(this, &nsHTMLMediaElement::SelectResource);
+  AsyncAwaitStableState(this, &nsHTMLMediaElement::SelectResourceWrapper);
 }
 
 /* void load (); */
@@ -658,6 +658,12 @@ static bool HasSourceChildren(nsIContent *aElement)
   return false;
 }
 
+void nsHTMLMediaElement::SelectResourceWrapper()
+{
+  SelectResource();
+  mIsRunningSelectResource = false;
+  mHaveQueuedSelectResource = false;
+}
 void nsHTMLMediaElement::SelectResource()
 {
   if (!HasAttr(kNameSpaceID_None, nsGkAtoms::src) && !HasSourceChildren(this)) {
@@ -666,9 +672,11 @@ void nsHTMLMediaElement::SelectResource()
     mNetworkState = nsIDOMHTMLMediaElement::NETWORK_EMPTY;
     // This clears mDelayingLoadEvent, so AddRemoveSelfReference will be called
     ChangeDelayLoadStatus(false);
-    mIsRunningSelectResource = false;
     return;
   }
+
+  UpdatePreloadAction();
+  mIsRunningSelectResource = true;
 
   ChangeDelayLoadStatus(true);
 
@@ -677,9 +685,7 @@ void nsHTMLMediaElement::SelectResource()
   // AddRemoveSelfReference, since it must still be held
   DispatchAsyncEvent(NS_LITERAL_STRING("loadstart"));
 
-  UpdatePreloadAction();
-  mHaveQueuedSelectResource = true;
-
+  
   // If we have a 'src' attribute, use that exclusively.
   nsAutoString src;
   if (GetAttr(kNameSpaceID_None, nsGkAtoms::src, src)) {
@@ -694,13 +700,11 @@ void nsHTMLMediaElement::SelectResource()
         // preload:none media, suspend the load here before we make any
         // network requests.
         SuspendLoad();
-        mIsRunningSelectResource = false;
         return;
       }
 
       rv = LoadResource();
       if (NS_SUCCEEDED(rv)) {
-        mIsRunningSelectResource = false;
         return;
       }
     } else {
@@ -713,7 +717,6 @@ void nsHTMLMediaElement::SelectResource()
     mIsLoadingFromSourceChildren = true;
     LoadFromSourceChildren();
   }
-  mIsRunningSelectResource = false;
 }
 
 void nsHTMLMediaElement::NotifyLoadError()
@@ -885,7 +888,7 @@ void nsHTMLMediaElement::UpdatePreloadAction()
         nextAction = nsHTMLMediaElement::PRELOAD_METADATA;
       } else if (attr == nsHTMLMediaElement::PRELOAD_ATTR_NONE) {
         nextAction = nsHTMLMediaElement::PRELOAD_NONE;
-      }
+      } 
     } else {
       // Use the suggested "missing value default" of "metadata", or the value
       // specified by the media.preload.default, if present.
@@ -899,8 +902,8 @@ void nsHTMLMediaElement::UpdatePreloadAction()
     // so don't change the preload behaviour.
     return;
   }
-
   mPreloadAction = nextAction;
+
   if (nextAction == nsHTMLMediaElement::PRELOAD_ENOUGH) {
     if (mLoadIsSuspended) {
       // Our load was previouly suspended due to the media having preload
