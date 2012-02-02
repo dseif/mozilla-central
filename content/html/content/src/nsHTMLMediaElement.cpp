@@ -675,9 +675,6 @@ void nsHTMLMediaElement::SelectResource()
     return;
   }
 
-  UpdatePreloadAction();
-  mIsRunningSelectResource = true;
-
   ChangeDelayLoadStatus(true);
 
   mNetworkState = nsIDOMHTMLMediaElement::NETWORK_LOADING;
@@ -685,6 +682,8 @@ void nsHTMLMediaElement::SelectResource()
   // AddRemoveSelfReference, since it must still be held
   DispatchAsyncEvent(NS_LITERAL_STRING("loadstart"));
 
+  UpdatePreloadAction();
+  mIsRunningSelectResource = true;
   
   // If we have a 'src' attribute, use that exclusively.
   nsAutoString src;
@@ -896,14 +895,17 @@ void nsHTMLMediaElement::UpdatePreloadAction()
     }
   }
 
-  if ((mBegun || mIsRunningSelectResource) && nextAction < mPreloadAction) {
+  if ((mBegun || mHaveQueuedSelectResource) && nextAction < mPreloadAction) {
+    if(!mHaveQueuedSelectResource) {
+      mPreloadAction = nextAction;
+    }
     // We've started a load or are already downloading, and the preload was
     // changed to a state where we buffer less. We don't support this case,
     // so don't change the preload behaviour.
     return;
   }
-  mPreloadAction = nextAction;
 
+  mPreloadAction = nextAction;
   if (nextAction == nsHTMLMediaElement::PRELOAD_ENOUGH) {
     if (mLoadIsSuspended) {
       // Our load was previouly suspended due to the media having preload

@@ -523,7 +523,7 @@ var tests = [
       v.play(); // Should cause preload:none to be overridden.
     },  
   },
-/*  {
+  {
     // 19. Set preload='auto' on first video source then switching preload='none' and swapping the video source to another.
     // The second video should not start playing as it's preload state has been changed to 'none' from 'auto'
     loadedmetadata: function(e) {
@@ -534,7 +534,7 @@ var tests = [
         v.preload="none";
         v.src = "http://pearce.org.nz/video/arctic_giant.webm";
         setTimeout(function() {
-          is(v.readyState === 0, true, "(19) preload was none, no additional data was loaded");
+          is(v.readyState === 0, true, "(19) no buffering has taken place");
           maybeFinish(v, 19);
         }, 2000);
       }, 2000);
@@ -550,7 +550,7 @@ var tests = [
       v.addEventListener( "loadedmetadata", this.loadedmetadata, false);
       document.body.appendChild(v);
     }
-  }*/
+  }
 ];
 
 var iterationCount = 0;
