@@ -57,7 +57,7 @@
 #endif
 %}
 
-[scriptable, uuid(6733a409-fab3-45e1-af23-9af8c361bdfd)]
+[scriptable, uuid(a303db27-3baf-46ce-8804-7c037d9c7a4d)]
 interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
 {
   // error state
@@ -127,4 +127,7 @@ interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
   // the media element has a fragment URI for the currentSrc, otherwise
   // it is equal to the media duration.
   readonly attribute double mozFragmentEnd;
+
+  // the number of bytes ( both audio and video ) that have been decoded so far
+  readonly attribute unsigned long mozBytesDecoded;
 };

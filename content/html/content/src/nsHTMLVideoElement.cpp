@@ -220,3 +220,9 @@ NS_IMETHODIMP nsHTMLVideoElement::GetMozFrameDelay(double *aMozFrameDelay) {
   *aMozFrameDelay = container ?  container->GetFrameDelay() : 0;
   return NS_OK;
 }
+
+NS_IMETHODIMP nsHTMLVideoElement::GetMozDroppedFrames(PRUint32 *aMozDroppedFrames) {
+  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
+  *aMozDroppedFrames = mDecoder ? mDecoder->GetFrameStatistics().GetDroppedFrames() : 0;
+  return NS_OK;
+}

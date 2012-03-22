@@ -1281,6 +1281,19 @@ nsHTMLMediaElement::GetMozFrameBufferLength(PRUint32 *aMozFrameBufferLength)
 }
 
 NS_IMETHODIMP
+nsHTMLMediaElement::GetMozBytesDecoded(PRUint32 *aMozBytesDecoded)
+{
+  // ensure that a decoder is available to request the number bytes from
+  if (!mDecoder) {
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  }
+
+  nsMediaDecoder::Statistics stats = mDecoder->GetStatistics();
+  *aMozBytesDecoded = stats.mBytesDecoded;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsHTMLMediaElement::SetMozFrameBufferLength(PRUint32 aMozFrameBufferLength)
 {
   if (!mDecoder)

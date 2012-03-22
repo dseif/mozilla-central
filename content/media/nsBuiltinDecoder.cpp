@@ -593,6 +593,7 @@ nsBuiltinDecoder::GetStatistics()
     result.mPlaybackRate = ComputePlaybackRate(&result.mPlaybackRateReliable);
     result.mDecoderPosition = mDecoderPosition;
     result.mPlaybackPosition = mPlaybackPosition;
+    result.mBytesDecoded = mPlaybackStatistics.GetBytes();
   }
   else {
     result.mDownloadRate = 0;
@@ -603,6 +604,7 @@ nsBuiltinDecoder::GetStatistics()
     result.mPlaybackPosition = 0;
     result.mDownloadPosition = 0;
     result.mTotalBytes = 0;
+    result.mBytesDecoded = 0;
   }
 
   return result;

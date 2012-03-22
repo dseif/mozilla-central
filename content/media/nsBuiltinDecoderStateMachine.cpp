@@ -1962,6 +1962,7 @@ void nsBuiltinDecoderStateMachine::AdvanceFrame()
   nsAutoPtr<VideoData> currentFrame;
   if (mReader->mVideoQueue.GetSize() > 0) {
     VideoData* frame = mReader->mVideoQueue.PeekFront();
+    PRUint32 skippedFrames = 0;
     while (mRealTime || clock_time >= frame->mTime) {
       mVideoFrameEndTime = frame->mEndTime;
       currentFrame = frame;
@@ -1970,10 +1971,12 @@ void nsBuiltinDecoderStateMachine::AdvanceFrame()
       // free'd up space for more frames.
       mDecoder->GetReentrantMonitor().NotifyAll();
       mDecoder->UpdatePlaybackOffset(frame->mOffset);
+      skippedFrames++;
       if (mReader->mVideoQueue.GetSize() == 0)
         break;
       frame = mReader->mVideoQueue.PeekFront();
     }
+    mDecoder->GetFrameStatistics().NotifyDroppedFrames(skippedFrames);
     // Current frame has already been presented, wait until it's time to
     // present the next frame.
     if (frame && !currentFrame) {

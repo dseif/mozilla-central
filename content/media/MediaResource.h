@@ -101,6 +101,9 @@ public:
     }
     mAccumulatedBytes += aBytes;
   }
+  PRUint32 GetBytes() {
+    return static_cast<PRUint32>(mAccumulatedBytes);
+  }
   double GetRateAtLastStop(bool* aReliable) {
     double seconds = mAccumulatedTime.ToSeconds();
     *aReliable = seconds >= 1.0;

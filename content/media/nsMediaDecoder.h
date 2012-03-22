@@ -169,6 +169,8 @@ public:
     double mDownloadRate;
     // Total length of media stream in bytes; -1 if not known
     PRInt64 mTotalBytes;
+    // The total number of bytes that have been decoded
+    PRInt32 mBytesDecoded;
     // Current position of the download, in bytes. This is the offset of
     // the first uncached byte after the decoder position.
     PRInt64 mDownloadPosition;
@@ -196,7 +198,8 @@ public:
         mReentrantMonitor("nsMediaDecoder::FrameStats"),
         mParsedFrames(0),
         mDecodedFrames(0),
-        mPresentedFrames(0) {}
+        mPresentedFrames(0),
+        mDroppedFrames(0) {}
 
     // Returns number of frames which have been parsed from the media.
     // Can be called on any thread.
@@ -210,6 +213,17 @@ public:
     PRUint32 GetDecodedFrames() {
       mozilla::ReentrantMonitorAutoEnter mon(mReentrantMonitor);
       return mDecodedFrames;
+    }
+
+    PRUint32 GetDroppedFrames() {
+      mozilla::ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+      return mDroppedFrames;
+    }
+
+    // Updated when the stateMachine determines frames can be skipped
+    void NotifyDroppedFrames(PRUint32 aDroppedFrames) {
+      mozilla::ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+      mDroppedFrames += aDroppedFrames;
     }
 
     // Returns the number of decoded frames which have been sent to the rendering
@@ -253,6 +267,9 @@ public:
     // Number of decoded frames which were actually sent down the rendering
     // pipeline to be painted ("presented"). Access protected by mStatsReentrantMonitor.
     PRUint32 mPresentedFrames;
+
+    // The total number of frames dropped due to performance issues
+    PRUint32 mDroppedFrames;
   };
 
   // Stack based class to assist in notifying the frame statistics of

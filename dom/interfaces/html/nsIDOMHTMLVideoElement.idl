@@ -75,5 +75,8 @@ interface nsIDOMHTMLVideoElement : nsIDOMHTMLMediaElement
 
   // Time which the last painted video frame was late by, in seconds.
   readonly attribute double mozFrameDelay;
+
+  // The number of frames of video that have been dropped due to performance reasons
+  readonly attribute unsigned long mozDroppedFrames;
 };
 
