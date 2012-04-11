@@ -818,6 +818,7 @@
                 },
                 HIDE_CONTROLS_TIMEOUT_MS : 2000,
                 onMouseMove : function (event) {
+                    var self = this;
                     // If the controls are static, don't change anything.
                     if (!this.dynamicControls)
                         return;
@@ -835,7 +836,9 @@
                     // Hide the controls if the mouse cursor is left on top of the video
                     // but above the control bar and if the click-to-play overlay is hidden.
                     if (event.clientY < this.controlBar.getBoundingClientRect().top && this.clickToPlay.hidden) {
-                        this._hideControlsTimeout = setTimeout(this._hideControlsFn, this.HIDE_CONTROLS_TIMEOUT_MS);
+                        this._hideControlsTimeout = setTimeout(function() {
+                            self._hideControlsFn(self);
+                        }, this.HIDE_CONTROLS_TIMEOUT_MS);
                     }
                 },
 
@@ -891,7 +894,7 @@
                         // Bug 493523, the scrubber doesn't call valueChanged while hidden,
                         // so our dependent state (eg, timestamp in the thumb) will be stale.
                         // As a workaround, update it manually when it first becomes unhidden.
-                        if (element.hidden)
+                        if (element.hidden && this.scrubber.valueChanged !== undefined)
                             this.scrubber.valueChanged("curpos", this.video.currentTime * 1000, false);
                     }
 
@@ -1362,6 +1365,15 @@
                     addListener(this.fullscreenButton, "command", this.toggleFullscreen);
                     addListener(this.clickToPlay, "click", this.clickToPlayClickHandler);
                     addListener(this.controlsSpacer, "click", this.clickToPlayClickHandler);
+
+                    this.video.ownerDocument.addEventListener( "mouseover", function() {
+                        clearTimeout(self._hideControlsTimeout);
+                        if(self.isVideoInFullScreen()) {
+                            self._hideControlsTimeout = setTimeout(function() {
+                                self._hideControlsFn(self);
+                            }, self.HIDE_CONTROLS_TIMEOUT_MS);
+                        }
+                    }, false);
 
                     if (!this.isAudioOnly) {
                       addListener(this.muteButton, "mouseover", this.onVolumeMouseInOut);
