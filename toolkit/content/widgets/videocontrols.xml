@@ -812,7 +812,7 @@
                 },
 
                 _hideControlsTimeout : 0,
-                _hideControlsFn : function () {
+                _hideControlsFn : function ( Utils ) {
                     if (!Utils.scrubber.isDragging)
                         Utils.startFade(Utils.controlBar, false);
                 },
